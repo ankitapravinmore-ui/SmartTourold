@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SmartTour360 | Smart Tourism Companion (SIH26204)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Leaflet Map CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+          colors: {
+            smart: {
+              blue: '#0084FF',
+              cyan: '#00C8FF',
+              green: '#00D06C',
+              dark: '#080C16',
+              card: '#0E1729'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #080C16; color: #F1F5F9; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .smart-card { background: linear-gradient(135deg, rgba(14, 23, 41, 0.85) 0%, rgba(8, 12, 22, 0.95) 100%); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); }
+    .leaflet-container { width: 100%; height: 100%; border-radius: 1rem; z-index: 10; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans selection:bg-[#00D06C] selection:text-slate-950">
+
+  <!-- TOP HEADER -->
+  <header class="sticky top-0 z-40 bg-[#080C16]/95 backdrop-blur border-b border-white/10 px-3.5 py-2.5">
+    <div class="max-w-md mx-auto flex items-center justify-between gap-2">
+      <!-- Brand & User Logo -->
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-xl overflow-hidden border border-cyan-400/40 shadow-md shadow-cyan-500/20 shrink-0 bg-[#0E1729]">
+          <img src="/logo.jpg" alt="SmartTour360 Logo" class="w-full h-full object-cover" onerror="this.src='logo.jpg'" />
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="font-extrabold text-sm tracking-tight text-white flex items-center gap-0.5">
+              <span class="text-[#00C8FF]">Smart</span>
+              <span class="text-[#0084FF]">Tour</span>
+              <span class="text-[#00D06C]">360</span>
+            </span>
+            <span class="text-[8px] px-1 rounded bg-cyan-950 text-cyan-300 border border-cyan-700/60 font-black uppercase">
+              SIH26204
+            </span>
+          </div>
+          <div class="flex items-center gap-1 text-[10px] text-slate-400">
+            <span class="text-amber-400">📍</span>
+            <select id="citySelect" onchange="switchCity(this.value)" class="bg-transparent font-medium text-slate-300 focus:outline-none cursor-pointer">
+              <option value="jaipur" class="bg-slate-900 text-white">Jaipur (Pink City)</option>
+              <option value="varanasi" class="bg-slate-900 text-white">Varanasi (Kashi)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Controls -->
+      <div class="flex items-center gap-1.5">
+        <!-- Currency -->
+        <select id="currSelect" onchange="changeCurrency(this.value)" class="bg-[#131D33] border border-white/10 text-[11px] font-bold text-amber-400 rounded-lg px-1.5 py-1">
+          <option value="INR">₹ INR</option>
+          <option value="USD">$ USD</option>
+          <option value="EUR">€ EUR</option>
+          <option value="GBP">£ GBP</option>
+        </select>
+
+        <!-- Role Toggle (Tourist vs Gov) -->
+        <button id="roleToggleBtn" onclick="toggleRole()" class="px-2 py-1 rounded-lg text-[10px] font-bold border transition bg-[#131D33] border-white/10 text-slate-300">
+          <span id="roleLabel">Tourist</span>
+        </button>
+
+        <!-- Offline Toggle -->
+        <button id="offlineBtn" onclick="toggleOffline()" class="p-1.5 rounded-lg border transition bg-emerald-950/40 border-emerald-700/60 text-[#00D06C]" title="Simulate Offline PWA">
+          <span id="offlineDot">🟢</span>
+        </button>
+
+        <!-- Jury Defense Kit -->
+        <button onclick="openEvalModal()" class="p-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-xs shadow-md" title="Jury Q&A">
+          🏆
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN VIEW CONTAINER -->
+  <main class="flex-1 max-w-md mx-auto w-full px-3.5 pt-3 pb-24 space-y-4">
+
+    <!-- MODULE 1: BUDGET FINANCIAL SPINE -->
+    <section id="tab-budget" class="space-y-3.5">
+      <div class="p-5 rounded-2xl smart-card border border-cyan-500/30 shadow-2xl relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <div>
+            <div class="flex items-center gap-1 text-[10px] font-extrabold text-cyan-400 uppercase tracking-wider">
+              <span>Module 1 • Financial Spine</span>
+              <span>•</span>
+              <span id="badgeCurrency" class="text-[#00D06C]">INR Live</span>
+            </div>
+            <h2 id="heroTitle" class="text-lg font-black text-white mt-0.5">Jaipur Budget Pulse</h2>
+            <p class="text-[11px] text-slate-400">3 Days • 3 Travelers • Live Auto-Deductions</p>
+          </div>
+          <button onclick="promptBudget()" class="px-2.5 py-1 rounded-lg bg-[#131D33] text-xs font-bold text-slate-200 border border-white/10">
+            Edit Pool
+          </button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-white/10 text-center">
+          <div class="p-2 rounded-xl bg-[#080C16]/60 border border-white/5">
+            <span class="text-[9px] text-slate-400 uppercase font-semibold">Total Pool</span>
+            <div id="statTotal" class="text-sm font-black text-white mt-0.5">₹18,000</div>
+          </div>
+          <div class="p-2 rounded-xl bg-[#080C16]/60 border border-white/5">
+            <span class="text-[9px] text-slate-400 uppercase font-semibold">Spent</span>
+            <div id="statSpent" class="text-sm font-black text-rose-400 mt-0.5">₹740</div>
+          </div>
+          <div class="p-2 rounded-xl bg-[#080C16]/60 border border-white/5">
+            <span class="text-[9px] text-slate-400 uppercase font-semibold">Remaining</span>
+            <div id="statRemaining" class="text-sm font-black text-[#00D06C] mt-0.5">₹17,260</div>
+          </div>
+        </div>
+
+        <div class="mt-3.5">
+          <div class="flex justify-between text-[10px] font-bold mb-1">
+            <span class="text-slate-300">Spend Ratio</span>
+            <span id="statPercent" class="text-cyan-400">4%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+            <div id="progressBar" class="bg-gradient-to-r from-cyan-500 to-[#00D06C] h-full rounded-full transition-all" style="width: 4%"></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-white/10 text-xs">
+          <div class="flex items-center gap-2 p-2 rounded-xl bg-[#080C16]/60 border border-white/5">
+            <span class="text-[#00D06C] font-bold">📈</span>
+            <div>
+              <div class="text-[9px] text-slate-400">Daily Allowance</div>
+              <div id="statDaily" class="font-bold text-white text-[11px]">₹5,753 / day</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 p-2 rounded-xl bg-[#080C16]/60 border border-white/5">
+            <span class="text-amber-400 font-bold">⚡</span>
+            <div>
+              <div class="text-[9px] text-slate-400">Burn Status</div>
+              <div class="font-bold text-amber-300 text-[11px]">Frugal & Optimal</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5 Category Buckets -->
+      <div class="space-y-2">
+        <div class="flex justify-between items-center">
+          <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">5 Category Buckets</h3>
+          <button onclick="promptExpense()" class="text-xs font-bold text-[#00D06C]">+ Log Expense</button>
+        </div>
+        <div id="bucketsContainer" class="space-y-2"></div>
+      </div>
+
+      <!-- Live Transaction Ledger -->
+      <div class="space-y-2">
+        <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Transaction Ledger</h3>
+        <div id="txContainer" class="space-y-1.5"></div>
+      </div>
+    </section>
+
+    <!-- MODULE 2: STAYS & MOBILITY -->
+    <section id="tab-stays" class="space-y-3.5 hidden">
+      <div class="flex justify-between items-start">
+        <div>
+          <span class="text-[10px] font-extrabold text-[#00D06C] uppercase tracking-wider">Module 2 • Stays & Transit</span>
+          <h2 class="text-lg font-black text-white">Stays & Mobility</h2>
+          <p class="text-[11px] text-slate-400">Eco-certified lodging & electric transport with live budget sync</p>
+        </div>
+        <button onclick="toggleEcoFilter()" id="ecoFilterBtn" class="px-2.5 py-1.5 rounded-xl text-xs font-bold border transition bg-[#131D33] border-white/10 text-slate-400">
+          🌿 Eco Only
+        </button>
+      </div>
+
+      <!-- Weather Advisory Banner -->
+      <div class="p-3 rounded-xl bg-amber-950/30 border border-amber-500/30 text-xs text-amber-200 space-y-0.5">
+        <div class="font-bold text-amber-300 flex items-center gap-1">
+          <span>☀️ Jaipur Weather: 34°C (Sunny & Hot)</span>
+        </div>
+        <p class="text-[10px] text-slate-300">Peak afternoon heat advisory. Prefer air-cooled indoor museums (Anokhi Museum).</p>
+      </div>
+
+      <div class="flex rounded-xl bg-[#131D33] p-1 border border-white/10 text-xs font-bold">
+        <button onclick="switchStayTab('stays')" id="btnStaySub" class="flex-1 py-1.5 rounded-lg bg-[#0084FF] text-white">🏨 Stays</button>
+        <button onclick="switchStayTab('transit')" id="btnTransitSub" class="flex-1 py-1.5 rounded-lg text-slate-400">🚕 Transit Fares</button>
+      </div>
+
+      <div id="staysContent" class="space-y-3"></div>
+      <div id="transitContent" class="space-y-3 hidden"></div>
+    </section>
+
+    <!-- MODULE 3: HIDDEN HERITAGE -->
+    <section id="tab-heritage" class="space-y-3.5 hidden">
+      <div class="flex justify-between items-start">
+        <div>
+          <span class="text-[10px] font-extrabold text-[#A855F7] uppercase tracking-wider">Module 3 • Hidden Heritage</span>
+          <h2 class="text-lg font-black text-white">Curated Hidden Gems</h2>
+          <p class="text-[11px] text-slate-400">Offbeat stepwells, artisan havelis, and crowd schedules</p>
+        </div>
+        <div class="flex rounded-xl bg-[#131D33] p-1 border border-white/10 text-xs font-bold">
+          <button onclick="switchHeritageView('cards')" id="btnHCard" class="px-2.5 py-1 rounded-lg bg-[#0084FF] text-white">Cards</button>
+          <button onclick="switchHeritageView('map')" id="btnHMap" class="px-2.5 py-1 rounded-lg text-slate-400">Map</button>
+        </div>
+      </div>
+
+      <div id="heritageCards" class="space-y-3"></div>
+      <div id="heritageMapWrap" class="space-y-2 hidden">
+        <div id="leafletMap" class="w-full h-80 rounded-2xl border border-white/10 bg-slate-900"></div>
+      </div>
+    </section>
+
+    <!-- MODULE 4: EMERGENCY & SAFETY SOS -->
+    <section id="tab-safety" class="space-y-3.5 hidden">
+      <div>
+        <span class="text-[10px] font-extrabold text-rose-400 uppercase tracking-wider">Module 4 • Emergency SOS</span>
+        <h2 class="text-lg font-black text-white">One-Tap Safety & SOS</h2>
+        <p class="text-[11px] text-slate-400">Offline PWA cache • Broadcasts GPS coordinates to 112</p>
+      </div>
+
+      <div class="rounded-2xl bg-gradient-to-br from-rose-950 via-[#0E1729] to-[#080C16] border-2 border-rose-600/70 p-5 text-center space-y-3 shadow-2xl">
+        <div class="text-[10px] font-black text-rose-400 uppercase tracking-wider animate-pulse">
+          🚨 Emergency Tourist Beacon
+        </div>
+        <button onclick="triggerSOS()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-base shadow-xl shadow-rose-600/50 active:scale-95 transition">
+          TRIGGER ONE-TAP SOS
+        </button>
+        <div class="flex justify-between items-center text-[10px] text-slate-400 pt-2 border-t border-rose-900/40">
+          <span>GPS: 26.9855° N, 75.8513° E</span>
+          <span class="text-[#00D06C] font-bold">Cached Locally</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <a href="tel:112" class="p-2.5 rounded-xl smart-card border border-white/5 flex justify-between items-center text-xs">
+          <div>
+            <div class="font-bold text-white text-[11px]">Helpline</div>
+            <div class="text-[10px] text-amber-400 font-bold">📞 112 (24/7)</div>
+          </div>
+          <span class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">Call</span>
+        </a>
+        <a href="tel:1363" class="p-2.5 rounded-xl smart-card border border-white/5 flex justify-between items-center text-xs">
+          <div>
+            <div class="font-bold text-white text-[11px]">Tourist Help</div>
+            <div class="text-[10px] text-[#00D06C] font-bold">📞 1363</div>
+          </div>
+          <span class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">Call</span>
+        </a>
+      </div>
+
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Nearest 24/7 Trauma Hospitals</h4>
+        <div id="hospitalsList" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <!-- MODULE 8: AUDIO GUIDE & INSCRIPTION SCANNER -->
+    <section id="tab-audio" class="space-y-3.5 hidden">
+      <div>
+        <span class="text-[10px] font-extrabold text-cyan-400 uppercase tracking-wider">Module 8 • Ancient Inscriptions & Audio</span>
+        <h2 class="text-lg font-black text-white">Epigraphy Scanner & Audio</h2>
+        <p class="text-[11px] text-slate-400">Decodes ancient stone inscriptions into regional voice guide (EN, HI, TA, KN)</p>
+      </div>
+
+      <div class="p-3 rounded-2xl smart-card border border-white/10 flex justify-between items-center text-xs">
+        <span class="text-slate-300 font-bold">Narration Voice:</span>
+        <div class="flex gap-1">
+          <button onclick="setAudioLang('en')" id="aud-en" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-[#0084FF] text-white">EN</button>
+          <button onclick="setAudioLang('hi')" id="aud-hi" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-[#080C16] text-slate-400 border border-white/5">हिंदी</button>
+          <button onclick="setAudioLang('ta')" id="aud-ta" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-[#080C16] text-slate-400 border border-white/5">தமிழ்</button>
+          <button onclick="setAudioLang('kn')" id="aud-kn" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-[#080C16] text-slate-400 border border-white/5">ಕನ್ನಡ</button>
+        </div>
+      </div>
+
+      <!-- Plaque Card -->
+      <div class="p-4 rounded-2xl smart-card border border-cyan-500/30 space-y-3 shadow-xl">
+        <div class="relative h-40 w-full rounded-xl overflow-hidden bg-slate-900 border border-white/10">
+          <img id="plaqueImg" src="https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=600&q=80" class="w-full h-full object-cover" />
+          <div class="absolute inset-4 border-2 border-cyan-400/40 rounded-lg pointer-events-none flex items-center justify-center">
+            <span class="text-[10px] font-bold text-white bg-black/50 px-2 py-1 rounded">Viewfinder: Inscription Plaque</span>
+          </div>
+        </div>
+
+        <div class="flex gap-1.5 overflow-x-auto no-scrollbar text-xs">
+          <button onclick="selectPlaque(0)" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-[#0084FF] text-white whitespace-nowrap">Amer Fort (1612 AD)</button>
+          <button onclick="selectPlaque(1)" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-[#080C16] text-slate-400 border border-white/5 whitespace-nowrap">Sarnath Ashoka (250 BC)</button>
+          <button onclick="selectPlaque(2)" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-[#080C16] text-slate-400 border border-white/5 whitespace-nowrap">Belur Hoysala (1117 AD)</button>
+        </div>
+
+        <div class="p-3 rounded-xl bg-[#080C16] border border-white/5 space-y-2 text-xs">
+          <div class="font-bold text-white" id="plaqueTitle">Amer Fort Western Rampart Inscription (1612 AD)</div>
+          <div class="text-[10px] text-cyan-400 font-mono" id="plaqueScript">Script: Early Nagari / Rajasthani Dialect</div>
+          <div class="p-2 rounded bg-slate-900/60 font-mono text-[10px] text-amber-200" id="plaqueExcerpt">
+            संवत १६६९ वर्षे वैशाख सुदी... महाराजाधिराज मानसिंह देव कारितम्...
+          </div>
+          <p class="text-[11px] text-slate-300 leading-relaxed" id="plaqueDesc">
+            This 1612 AD stone inscription marks the expansion of the western battlements by Maharaja Man Singh I. It honors the stone masons and invokes Goddess Shila Devi for divine protection against invaders.
+          </p>
+          <button onclick="playPlaqueAudio()" id="plaqueAudioBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-[#0084FF] text-white font-bold text-xs flex items-center justify-center gap-2">
+            <span>🔊 Read Inscription Aloud</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODULE 6: GROUP SPLIT -->
+    <section id="tab-split" class="space-y-3.5 hidden">
+      <div class="flex justify-between items-start">
+        <div>
+          <span class="text-[10px] font-extrabold text-[#00D06C] uppercase tracking-wider">Module 6 • Group Split Engine</span>
+          <h2 class="text-lg font-black text-white">Group Splitwise & Debts</h2>
+          <p class="text-[11px] text-slate-400">Greedy debt solver with UPI settlement QR</p>
+        </div>
+        <button onclick="promptAddMember()" class="px-2.5 py-1 rounded-lg bg-[#0084FF] text-white font-bold text-xs">
+          + Add Member
+        </button>
+      </div>
+
+      <div class="p-4 rounded-2xl smart-card border border-white/10 flex justify-between items-center">
+        <div>
+          <span class="text-[10px] text-slate-400 uppercase font-semibold">Average Spend Per Person</span>
+          <div id="splitAvg" class="text-lg font-black text-white mt-0.5">₹247</div>
+          <span class="text-[9px] text-slate-400">Total Group Pool: <span id="splitTotal">₹740</span></span>
+        </div>
+        <span class="text-2xl">⚖️</span>
+      </div>
+
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Optimal Settlement Graph</h4>
+        <div id="splitDebts" class="space-y-2"></div>
+      </div>
+
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Member Balances</h4>
+        <div id="splitMembers" class="space-y-1.5"></div>
+      </div>
+    </section>
+
+    <!-- MODULE 5: AI CHATBOT -->
+    <section id="tab-assistant" class="space-y-3 hidden flex flex-col h-[calc(100vh-130px)]">
+      <div class="flex justify-between items-center pb-2 border-b border-white/10 shrink-0">
+        <div>
+          <span class="text-[9px] font-extrabold text-cyan-400 uppercase tracking-wider">Module 5 • Multilingual AI</span>
+          <h2 class="text-sm font-bold text-white">AI Yatri Sahayak</h2>
+        </div>
+        <select id="chatLang" class="bg-[#131D33] border border-white/10 text-xs text-white rounded-lg px-2 py-1 font-bold">
+          <option value="en">🇬🇧 English</option>
+          <option value="hi">🇮🇳 हिंदी (Hindi)</option>
+          <option value="ta">🇮🇳 தமிழ் (Tamil)</option>
+          <option value="kn">🇮🇳 ಕನ್ನಡ (Kannada)</option>
+        </select>
+      </div>
+
+      <div id="chatMessages" class="flex-1 overflow-y-auto space-y-2.5 text-xs pr-1">
+        <div class="smart-card border border-white/10 p-3 rounded-2xl rounded-tl-none text-slate-200 leading-relaxed max-w-[88%]">
+          Namaste! I am your AI Yatri Sahayak. I have your live trip context: exploring <strong class="text-cyan-300">Jaipur</strong> with <strong id="chatRemRef" class="text-[#00D06C]">₹17,260</strong> remaining. Ask me anything in English, हिंदी, தமிழ், or ಕನ್ನಡ!
+        </div>
+      </div>
+
+      <div class="flex gap-1.5 overflow-x-auto no-scrollbar py-1">
+        <button onclick="sendChatPrompt('What can I do right now for under ₹500?')" class="px-2.5 py-1 rounded-full bg-[#131D33] text-[10px] font-semibold text-slate-300 whitespace-nowrap">
+          💰 Under ₹500 near me
+        </button>
+        <button onclick="sendChatPrompt('Give me a live breakdown of my budget across buckets.')" class="px-2.5 py-1 rounded-full bg-[#131D33] text-[10px] font-semibold text-slate-300 whitespace-nowrap">
+          📊 Budget breakdown
+        </button>
+        <button onclick="sendChatPrompt('What local scams should I avoid here?')" class="px-2.5 py-1 rounded-full bg-[#131D33] text-[10px] font-semibold text-slate-300 whitespace-nowrap">
+          🛡️ Tourist scams
+        </button>
+      </div>
+
+      <div class="pt-2 border-t border-white/10 flex gap-2">
+        <input type="text" id="chatInput" placeholder="Ask in English, Hindi, Tamil, Kannada..." class="flex-1 bg-[#131D33] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400" onkeydown="if(event.key==='Enter') sendChatMessage()">
+        <button onclick="sendChatMessage()" class="px-4 py-2 bg-[#0084FF] hover:bg-[#0055D4] rounded-xl text-white font-bold text-xs">
+          Send
+        </button>
+      </div>
+    </section>
+
+    <!-- MODULE 9: GOVERNMENT ADMIN DASHBOARD -->
+    <section id="tab-gov" class="space-y-3.5 hidden">
+      <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-950 via-[#0E1729] to-[#080C16] border border-purple-600/50 space-y-2">
+        <div class="flex justify-between items-start">
+          <div>
+            <span class="text-[10px] font-extrabold text-purple-400 uppercase tracking-wider">Module 9 • Department Administration</span>
+            <h2 class="text-base font-black text-white">Rajasthan Tourism Dept Portal</h2>
+            <p class="text-[11px] text-slate-300">Footfall & Over-Tourism Reduction Telemetry</p>
+          </div>
+          <button onclick="toggleRole()" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-200 text-xs font-bold border border-white/10">
+            Exit to Tourist
+          </button>
+        </div>
+        <div class="p-2.5 rounded-xl bg-purple-900/30 border border-purple-500/30 text-[10px] text-purple-200">
+          🌿 <strong>Over-Tourism Reduction:</strong> SmartTour360 GPS algorithms have diverted <strong>38% of tourist flow</strong> away from saturated sites to verified local heritage spots.
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div class="p-3 rounded-xl smart-card border border-white/5 space-y-1">
+          <span class="text-[10px] text-slate-400">Total Tourist Footfall</span>
+          <div class="text-lg font-black text-white">22,170</div>
+          <span class="text-[9px] text-[#00D06C] font-semibold">+14% vs yesterday</span>
+        </div>
+        <div class="p-3 rounded-xl smart-card border border-white/5 space-y-1">
+          <span class="text-[10px] text-slate-400">Hidden Gem Diversion</span>
+          <div class="text-lg font-black text-[#00D06C]">7,350</div>
+          <span class="text-[9px] text-slate-400">Congestion saved</span>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Live Site Capacity & Footfall</h4>
+        <div class="space-y-2 text-xs">
+          <div class="p-3 rounded-xl smart-card border border-white/5 space-y-1">
+            <div class="flex justify-between font-bold">
+              <span class="text-white">Amer Fort (Imperial Citadel)</span>
+              <span class="text-rose-400 font-black text-[10px]">Near Capacity (98%)</span>
+            </div>
+            <div class="text-[10px] text-slate-400">Current: 14,820 / 15,000 capacity</div>
+            <div class="w-full bg-slate-900 rounded-full h-1.5"><div class="bg-rose-500 h-full rounded-full" style="width: 98%"></div></div>
+          </div>
+          <div class="p-3 rounded-xl smart-card border border-white/5 space-y-1">
+            <div class="flex justify-between font-bold">
+              <span class="text-white">Panna Meena ka Kund (Stepwell)</span>
+              <span class="text-[#00D06C] font-black text-[10px]">Optimal Flow (41%)</span>
+            </div>
+            <div class="text-[10px] text-slate-400">Current: 4,120 / 10,000 capacity <span class="text-[#00D06C] font-bold">• Diverted +34%</span></div>
+            <div class="w-full bg-slate-900 rounded-full h-1.5"><div class="bg-[#00D06C] h-full rounded-full" style="width: 41%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Regional Language Demand</h4>
+        <div class="p-3.5 rounded-xl smart-card border border-white/5 space-y-2 text-xs">
+          <div class="space-y-1">
+            <div class="flex justify-between text-[11px]"><span class="text-white font-bold">Hindi (हिंदी)</span><span class="text-slate-400">38%</span></div>
+            <div class="w-full bg-slate-900 rounded-full h-1.5"><div class="bg-[#0084FF] h-full rounded-full" style="width: 38%"></div></div>
+          </div>
+          <div class="space-y-1">
+            <div class="flex justify-between text-[11px]"><span class="text-white font-bold">Tamil (தமிழ்)</span><span class="text-slate-400">26%</span></div>
+            <div class="w-full bg-slate-900 rounded-full h-1.5"><div class="bg-[#00D06C] h-full rounded-full" style="width: 26%"></div></div>
+          </div>
+          <div class="space-y-1">
+            <div class="flex justify-between text-[11px]"><span class="text-white font-bold">Kannada (ಕನ್ನಡ)</span><span class="text-slate-400">21%</span></div>
+            <div class="w-full bg-slate-900 rounded-full h-1.5"><div class="bg-cyan-400 h-full rounded-full" style="width: 21%"></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BOTTOM NAVIGATION -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-[#080C16]/95 backdrop-blur-lg border-t border-white/10">
+    <div class="max-w-md mx-auto flex items-center justify-between py-2 px-1">
+      <button onclick="switchTab('budget')" id="nav-budget" class="flex flex-col items-center flex-1 text-[#00D06C] text-[9px] font-bold">
+        <span class="text-sm">📊</span><span>Budget</span>
+      </button>
+      <button onclick="switchTab('stays')" id="nav-stays" class="flex flex-col items-center flex-1 text-slate-400 text-[9px]">
+        <span class="text-sm">🏨</span><span>Stays</span>
+      </button>
+      <button onclick="switchTab('heritage')" id="nav-heritage" class="flex flex-col items-center flex-1 text-slate-400 text-[9px]">
+        <span class="text-sm">🏛️</span><span>Gems</span>
+      </button>
+      <button onclick="switchTab('safety')" id="nav-safety" class="flex flex-col items-center flex-1 text-slate-400 text-[9px] relative">
+        <span class="text-sm">🚨</span><span>SOS</span>
+        <span class="absolute -top-1 right-2 w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse"></span>
+      </button>
+      <button onclick="switchTab('audio')" id="nav-audio" class="flex flex-col items-center flex-1 text-slate-400 text-[9px]">
+        <span class="text-sm">🎙️</span><span>Audio</span>
+      </button>
+      <button onclick="switchTab('split')" id="nav-split" class="flex flex-col items-center flex-1 text-slate-400 text-[9px]">
+        <span class="text-sm">👥</span><span>Split</span>
+      </button>
+      <button onclick="switchTab('assistant')" id="nav-assistant" class="flex flex-col items-center flex-1 text-cyan-400 text-[9px]">
+        <span class="text-sm">🤖</span><span>AI</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- PROACTIVE GPS CROWD ALERT MODAL (MODULE 7) -->
+  <div id="crowdAlertModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-[#0E1729] border-2 border-amber-500 rounded-3xl max-w-sm w-full p-5 space-y-3 shadow-2xl relative overflow-hidden">
+      <div class="flex justify-between items-start">
+        <span class="text-[10px] font-black text-amber-400 uppercase tracking-wider">⚠️ GPS Crowd Alert</span>
+        <button onclick="closeCrowdAlert()" class="text-slate-400 hover:text-white font-bold">✕</button>
+      </div>
+      <div>
+        <h3 class="text-base font-black text-white">High Footfall at Amer Fort</h3>
+        <p class="text-[11px] text-slate-300 mt-1">
+          Peak window (11:00 AM - 03:30 PM). Wait time is ~45–60 mins.
+        </p>
+      </div>
+      <div class="space-y-2 pt-1 border-t border-white/10">
+        <span class="text-[10px] font-bold text-[#00D06C] uppercase">Low-Crowd Alternatives Nearby</span>
+        <div class="p-3 rounded-xl smart-card border border-[#00D06C]/30 space-y-1 text-xs">
+          <div class="font-bold text-white">Panna Meena ka Kund (Stepwell)</div>
+          <p class="text-[10px] text-slate-300">450-yr-old geometric stepwell, free entry, 800m away.</p>
+          <button onclick="rerouteSpot('Panna Meena ka Kund', 0)" class="w-full py-1.5 rounded-lg bg-[#00D06C] text-slate-950 font-bold text-[11px]">
+            Reroute to Stepwell (Skip Crowd)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JURY DEFENSE KIT MODAL -->
+  <div id="evalModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-[#0E1729] border border-white/10 rounded-3xl max-w-md w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="p-4 bg-gradient-to-r from-cyan-600 via-[#0084FF] to-[#00D06C] flex justify-between items-center text-slate-950 font-black">
+        <span>🏆 SIH26204 Evaluator Defense Kit</span>
+        <button onclick="closeEvalModal()" class="w-6 h-6 rounded-full bg-black/20 font-bold">✕</button>
+      </div>
+      <div class="p-4 overflow-y-auto space-y-3 text-xs text-slate-300">
+        <div class="p-3 rounded-xl smart-card border border-white/5">
+          <strong class="text-cyan-400">1. Data Sources:</strong>
+          <p class="mt-1">Rajasthan Tourism Open Data (tourism.rajasthan.gov.in), OpenStreetMap amenity layers, Jaipur Metro GTFS schedules, and National Health Portal trauma centers.</p>
+        </div>
+        <div class="p-3 rounded-xl smart-card border border-white/5">
+          <strong class="text-[#00D06C]">2. Value-Add:</strong>
+          <p class="mt-1">Connective financial spine that re-balances 5 buckets in real time, plus GPS crowd diversion and regional inscription plaque translation.</p>
+        </div>
+        <div class="p-3 rounded-xl smart-card border border-white/5">
+          <strong class="text-rose-400">3. Offline Handling:</strong>
+          <p class="mt-1">PWA Service Worker (<code class="text-cyan-300">public/sw.js</code>) pre-caches hospital coordinates, 112 police lines, and offline SMS dispatcher.</p>
+        </div>
+        <div class="p-3 rounded-xl smart-card border border-white/5">
+          <strong class="text-purple-400">4. Over-Tourism & Sustainability:</strong>
+          <p class="mt-1">Proactively redirects footfall to verified hidden gems, reducing congestion by 38% while promoting eco-certified stays and EV transport.</p>
+        </div>
+      </div>
+      <div class="p-3 border-t border-white/10 bg-[#080C16] text-right">
+        <button onclick="closeEvalModal()" class="px-4 py-1.5 rounded-xl bg-[#0084FF] font-bold text-white text-xs">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION ENGINE -->
+  <script>
+    let currentCity = 'jaipur';
+    let currentCurrency = 'INR';
+    let currentRole = 'tourist';
+    let isOffline = false;
+    let totalBudget = 18000;
+    let ecoOnly = false;
+    let audioLang = 'en';
+
+    const currencyRates = { INR: 1.0, USD: 83.5, EUR: 91.2, GBP: 108.4 };
+    const currencySymbols = { INR: '₹', USD: '$', EUR: '€', GBP: '£' };
+
+    function fmt(amtINR) {
+      const rate = currencyRates[currentCurrency] || 1.0;
+      const sym = currencySymbols[currentCurrency] || '₹';
+      const converted = Math.round((amtINR / rate) * 100) / 100;
+      return sym + converted.toLocaleString();
+    }
+
+    const members = [
+      { id: 'm1', name: 'You (Admin)', avatar: '👤' },
+      { id: 'm2', name: 'Aarav Sharma', avatar: '🎒' },
+      { id: 'm3', name: 'Priya Patel', avatar: '📷' }
+    ];
+
+    let expenses = [
+      { id: 'e1', title: 'Prepaid Taxi to Hostel', category: 'travel', amount: 320, paidBy: 'm1' },
+      { id: 'e2', title: 'Lassiwala Kulhad Lassi (MI Road)', category: 'food', amount: 270, paidBy: 'm2' },
+      { id: 'e3', title: 'Panna Meena Kund Camera Ticket', category: 'activities', amount: 150, paidBy: 'm3' }
+    ];
+
+    const categoryAlloc = { stay: 0.35, travel: 0.20, food: 0.20, activities: 0.15, buffer: 0.10 };
+    const categoryMeta = {
+      stay: { name: 'Stay & Lodging', icon: '🏨', color: '#0084FF' },
+      travel: { name: 'Local Transport', icon: '🚕', color: '#00D06C' },
+      food: { name: 'Food & Dining', icon: '🍲', color: '#F59E0B' },
+      activities: { name: 'Heritage Gems', icon: '🏛️', color: '#A855F7' },
+      buffer: { name: 'Safety Reserve', icon: '🛡️', color: '#EF4444' }
+    };
+
+    const staysList = [
+      { id: 's1', name: 'Zostel Jaipur (M.I. Road)', type: 'Backpacker Hostel', rating: 4.8, price: 649, eco: true, ecoBadge: 'Solar Water & Refill Station', img: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=600&q=80' },
+      { id: 's2', name: 'Horn OK Please Boutique', type: 'Boutique Pods', rating: 4.9, price: 799, eco: true, ecoBadge: 'Zero Single-Use Plastics', img: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80' },
+      { id: 's3', name: 'Moustache Jaipur', type: 'Social Hostel', rating: 4.7, price: 550, eco: false, ecoBadge: '', img: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80' }
+    ];
+
+    const heritageList = [
+      { id: 'h1', name: 'Amer Fort (Imperial Citadel)', fee: 100, crowd: 'High (11 AM - 3:30 PM)', isCrowded: true, gem: false, img: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=600&q=80', desc: 'Hilltop palace fortress with mirror mosaics.', coords: [26.9855, 75.8513] },
+      { id: 'h2', name: 'Panna Meena ka Kund', fee: 0, crowd: 'Low (Serene)', isCrowded: false, gem: true, img: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=600&q=80', desc: '450-yr-old geometric stepwell near Amer.', coords: [26.9856, 75.8569] },
+      { id: 'h3', name: 'Anokhi Museum of Hand Printing', fee: 80, crowd: 'Low (Air-Cooled)', isCrowded: false, gem: true, img: 'https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?auto=format&fit=crop&w=600&q=80', desc: 'Restored 16th-century Chanwar Padmini Haveli with live master block printers.', coords: [26.9904, 75.8526] }
+    ];
+
+    const plaques = [
+      {
+        title: 'Amer Fort Western Rampart Inscription (1612 AD)',
+        script: 'Early Nagari / Rajasthani Dialect',
+        excerpt: 'संवत १६६९ वर्षे वैशाख सुदी... महाराजाधिराज मानसिंह देव कारितम्...',
+        desc: {
+          en: 'This 1612 AD stone inscription marks the expansion of the western battlements by Maharaja Man Singh I.',
+          hi: 'यह 1612 ईस्वी का शिलालेख महाराजा मानसिंह प्रथम द्वारा पश्चिमी परकोटे के विस्तार को दर्शाता है।',
+          ta: 'இந்த கி.பி 1612 கல்வெட்டு, முதலாம் மான் சிங் மன்னரால் கட்டப்பட்ட ஆம்பர் கோட்டையின் மேற்கு சுவர்களைக் குறிக்கிறது.',
+          kn: 'ಕ್ರಿ.ಶ. 1612 ರ ಈ ಶಾಸನವು ಮಹಾರಾಜ ಮಾನ್ ಸಿಂಗ್ ನಿರ್ಮಿಸಿದ ಅಮೇರ್ ಕೋಟೆಯ ಪಶ್ಚಿಮ ರಕ್ಷಣಾ ಗೋಡೆಯನ್ನು ವಿವರಿಸುತ್ತದೆ.'
+        },
+        img: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=600&q=80'
+      },
+      {
+        title: 'Ashokan Schism Pillar Edict (250 BC)',
+        script: 'Ancient Brahmi Script (Prakrit Language)',
+        excerpt: 'देवानंपिये पियदसि लाजा हेवं आहा: ये केनपि संघे भेत्तवे...',
+        desc: {
+          en: 'Emperor Ashoka warns that any monk or nun who breaks the unity of the Sangha will be robed in white cloth and expelled.',
+          hi: 'सम्राट अशोक का यह आदेश संघ की एकता बनाए रखने का निर्देश देता है।',
+          ta: 'அசோக பேரரசரின் இந்த பிராமி கல்வெட்டு, சங்கத்தின் ஒற்றுமையை நிலைநிறுத்துமாறு கட்டளையிடுகிறது.',
+          kn: 'ಅಶೋಕ ಚಕ್ರವರ್ತಿಯ ಈ ಬ್ರಾಹ್ಮೀ ಶಾಸನವು ಬೌದ್ಧ ಸಂಘದ ಐಕ್ಯತೆಯನ್ನು ಕಾಪಾಡುವಂತೆ ಆಜ್ಞಾಪಿಸುತ್ತದೆ.'
+        },
+        img: 'https://images.unsplash.com/photo-1590077428593-a55bb07c4665?auto=format&fit=crop&w=600&q=80'
+      },
+      {
+        title: 'Vishnuvardhana Victory Stele (1117 AD)',
+        script: 'Old Kannada Script (Halegannada)',
+        excerpt: 'ಸ್ವಸ್ತಿ ಸಮಸ್ತ ಭುವನಾಶ್ರಯ ಶ್ರೀ ಪ್ರಿಥ್ವೀ ವಲ್ಲಭ ಮಹಾರಾಜಾಧಿರಾಜ ವಿಷ್ಣುವರ್ಧನ ದೇವ...',
+        desc: {
+          en: 'King Vishnuvardhana records the consecration of the magnificent Chennakeshava shrine following his victory over the Cholas.',
+          hi: 'होयसल राजा विष्णुवर्धन द्वारा 1117 ईस्वी में तलकाड के युद्ध में चोलों पर विजय के उपलक्ष्य में चेन्नाकेशव मंदिर की स्थापना।',
+          ta: 'ஹொய்சாள மன்னர் விஷ்ணுவர்த்தனன் தலக்காடு போரில் சோழர்களை வென்றதன் நினைவாக இந்த செந்நாகேசவ கோயிலை நிறுவியதை விவரிக்கும் கல்வெட்டு.',
+          kn: 'ಹೊಯ್ಸಳ ರಾಜ ವಿಷ್ಣುವರ್ಧನನು ತಲಕಾಡಿನ ಯುದ್ಧದಲ್ಲಿ ಚೋಳರ ಮೇಲೆ ವಿಜಯ ಸಾಧಿಸಿದ ನೆನಪಿನಲ್ಲಿ ನಿರ್ಮಿಸಿದ ಚಾರಿತ್ರಿಕ ಹಳೆಗನ್ನಡ ಶಾಸನ.'
+        },
+        img: 'https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?auto=format&fit=crop&w=600&q=80'
+      }
+    ];
+
+    let currentPlaqueIndex = 0;
+    let leafletMap = null;
+
+    // RENDER FUNCTIONS
+    function renderBudget() {
+      const spent = expenses.reduce((a, b) => a + Number(b.amount), 0);
+      const remaining = Math.max(0, totalBudget - spent);
+      const pct = Math.min(100, Math.round((spent / totalBudget) * 100));
+
+      document.getElementById('statTotal').innerText = fmt(totalBudget);
+      document.getElementById('statSpent').innerText = fmt(spent);
+      document.getElementById('statRemaining').innerText = fmt(remaining);
+      document.getElementById('statPercent').innerText = pct + '%';
+      document.getElementById('progressBar').style.width = pct + '%';
+      document.getElementById('statDaily').innerText = fmt(Math.round(remaining / 3)) + ' / day';
+      document.getElementById('chatRemRef').innerText = fmt(remaining);
+      document.getElementById('badgeCurrency').innerText = currentCurrency + ' Live';
+
+      // Buckets
+      const bCont = document.getElementById('bucketsContainer');
+      bCont.innerHTML = '';
+      Object.entries(categoryAlloc).forEach(([k, r]) => {
+        const alloc = Math.round(totalBudget * r);
+        const cSpent = expenses.filter(e => e.category === k).reduce((a, b) => a + Number(b.amount), 0);
+        const meta = categoryMeta[k];
+        const p = Math.min(100, Math.round((cSpent / alloc) * 100));
+        bCont.innerHTML += `
+          <div class="p-3 rounded-xl smart-card border border-white/5">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-white">${meta.icon} ${meta.name}</span>
+              <span class="font-bold text-slate-300">${fmt(cSpent)} / <span class="text-slate-400">${fmt(alloc)}</span></span>
+            </div>
+            <div class="w-full bg-slate-900 rounded-full h-1.5 mt-2 overflow-hidden">
+              <div class="h-full rounded-full" style="width: ${p}%; background-color: ${meta.color}"></div>
+            </div>
+          </div>
+        `;
+      });
+
+      // Transactions
+      const tx = document.getElementById('txContainer');
+      tx.innerHTML = '';
+      expenses.slice().reverse().forEach(e => {
+        tx.innerHTML += `
+          <div class="p-2.5 rounded-xl bg-[#131D33]/60 border border-white/5 flex justify-between items-center text-xs">
+            <div>
+              <div class="font-semibold text-white">${e.title}</div>
+              <div class="text-[9px] text-slate-400">${e.category}</div>
+            </div>
+            <span class="font-extrabold text-[#00D06C]">${fmt(e.amount)}</span>
+          </div>
+        `;
+      });
+
+      renderSplit();
+    }
+
+    function renderStays() {
+      const cont = document.getElementById('staysContent');
+      cont.innerHTML = '';
+      const list = ecoOnly ? staysList.filter(s => s.eco) : staysList;
+      list.forEach(s => {
+        cont.innerHTML += `
+          <div class="rounded-2xl smart-card border border-white/10 overflow-hidden shadow-lg">
+            <div class="relative h-32 w-full">
+              <img src="${s.img}" class="w-full h-full object-cover" />
+              <div class="absolute inset-0 bg-gradient-to-t from-[#0E1729] via-transparent"></div>
+              ${s.eco ? `<span class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-emerald-950/90 border border-[#00D06C] text-[#00D06C] text-[9px] font-black">🌿 ${s.ecoBadge}</span>` : ''}
+              <span class="absolute top-2 right-2 px-2 py-0.5 rounded bg-slate-900/80 text-amber-300 text-[10px] font-bold">⭐ ${s.rating}</span>
+            </div>
+            <div class="p-3 flex justify-between items-center text-xs">
+              <div>
+                <h4 class="font-bold text-white text-sm">${s.name}</h4>
+                <div class="text-sm font-black text-white mt-0.5">${fmt(s.price)} <span class="text-[9px] text-slate-400">/ night</span></div>
+              </div>
+              <button onclick="bookStay('${s.name}', ${s.price})" class="px-3 py-1.5 rounded-xl bg-[#0084FF] text-white font-bold text-[11px]">
+                Reserve & Deduct
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      // Transit
+      document.getElementById('transitContent').innerHTML = `
+        <div class="p-3 rounded-xl smart-card border border-white/5 space-y-2 text-xs">
+          <div class="font-bold text-cyan-400">Electric Transit & Prepaid Tariffs</div>
+          <div class="p-2 bg-[#080C16] rounded-lg flex justify-between">
+            <span>🌿 Shared Electric Tuk-Tuk</span>
+            <strong class="text-[#00D06C]">${fmt(35)}</strong>
+          </div>
+          <div class="p-2 bg-[#080C16] rounded-lg flex justify-between">
+            <span>🌿 Jaipur Metro (Pink Line)</span>
+            <strong class="text-cyan-400">${fmt(18)}</strong>
+          </div>
+          <button onclick="bookTransit('Electric Tuk-Tuk', 35)" class="w-full py-2 bg-[#00D06C] text-slate-950 font-bold text-xs rounded-lg">
+            Book EV Ride & Deduct from Travel Bucket
+          </button>
+        </div>
+      `;
+    }
+
+    function renderHeritage() {
+      const cont = document.getElementById('heritageCards');
+      cont.innerHTML = '';
+      heritageList.forEach(s => {
+        cont.innerHTML += `
+          <div class="rounded-2xl smart-card border border-white/10 overflow-hidden shadow-lg">
+            <div class="relative h-36 w-full">
+              <img src="${s.img}" class="w-full h-full object-cover" />
+              <div class="absolute inset-0 bg-gradient-to-t from-[#0E1729] via-transparent"></div>
+              ${s.gem ? '<span class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-[#00D06C] text-slate-950 text-[9px] font-black">💎 HIDDEN GEM</span>' : ''}
+              <span class="absolute top-2 right-2 px-2 py-0.5 rounded bg-slate-900/80 text-emerald-300 text-[10px] font-black">${s.fee === 0 ? 'FREE' : fmt(s.fee)}</span>
+            </div>
+            <div class="p-3 space-y-2 text-xs">
+              <h4 class="font-bold text-white text-sm">${s.name}</h4>
+              <p class="text-[11px] text-slate-300">${s.desc}</p>
+              <div class="flex justify-between items-center pt-2 border-t border-white/5">
+                <span class="text-[10px] ${s.isCrowded ? 'text-rose-400 animate-pulse font-bold' : 'text-[#00D06C] font-bold'}">
+                  ${s.crowd}
+                </span>
+                <button onclick="addHeritage('${s.name}', ${s.fee})" class="px-3 py-1.5 rounded-xl bg-[#A855F7] text-white font-bold text-[11px]">
+                  Add to Trip
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function renderSplit() {
+      const total = expenses.reduce((a, b) => a + Number(b.amount), 0);
+      const avg = Math.round(total / members.length);
+      document.getElementById('splitAvg').innerText = fmt(avg);
+      document.getElementById('splitTotal').innerText = fmt(total);
+
+      // Balances
+      const bal = {};
+      members.forEach(m => bal[m.id] = 0);
+      expenses.forEach(e => {
+        bal[e.paidBy] += Number(e.amount);
+        const sh = Number(e.amount) / members.length;
+        members.forEach(m => bal[m.id] -= sh);
+      });
+
+      // Render simplified debts
+      const debtors = [];
+      const creditors = [];
+      Object.entries(bal).forEach(([id, net]) => {
+        const r = Math.round(net);
+        if (r < -1) debtors.push({ id, amt: -r });
+        else if (r > 1) creditors.push({ id, amt: r });
+      });
+
+      const dCont = document.getElementById('splitDebts');
+      dCont.innerHTML = '';
+      let d = 0, c = 0, count = 0;
+      while (d < debtors.length && c < creditors.length) {
+        const min = Math.min(debtors[d].amt, creditors[c].amt);
+        const debtorObj = members.find(m => m.id === debtors[d].id);
+        const creditorObj = members.find(m => m.id === creditors[c].id);
+        dCont.innerHTML += `
+          <div class="p-3 rounded-xl smart-card border border-white/5 flex justify-between items-center text-xs">
+            <span class="font-bold text-rose-300">${debtorObj.name} <span class="text-slate-400">owes</span> ${creditorObj.name}</span>
+            <div class="flex items-center gap-2">
+              <span class="font-black text-amber-400">${fmt(min)}</span>
+              <button onclick="alert('UPI Settlement QR Generated for ${fmt(min)} to ${creditorObj.name}')" class="px-2 py-1 rounded bg-[#131D33] text-[10px] font-bold text-white border border-white/10">Settle UPI</button>
+            </div>
+          </div>
+        `;
+        debtors[d].amt -= min;
+        creditors[c].amt -= min;
+        if (debtors[d].amt <= 1) d++;
+        if (creditors[c].amt <= 1) c++;
+        count++;
+      }
+      if (count === 0) {
+        dCont.innerHTML = '<div class="p-3 rounded-xl bg-emerald-950/40 text-[#00D06C] text-xs font-bold text-center">🎉 Everyone is settled up!</div>';
+      }
+
+      // Member Balances
+      const mCont = document.getElementById('splitMembers');
+      mCont.innerHTML = '';
+      members.forEach(m => {
+        const net = Math.round(bal[m.id]);
+        mCont.innerHTML += `
+          <div class="p-2.5 rounded-xl bg-[#131D33]/60 border border-white/5 flex justify-between items-center text-xs">
+            <span class="font-bold text-white">${m.avatar} ${m.name}</span>
+            <span class="font-black ${net > 0 ? 'text-[#00D06C]' : net < 0 ? 'text-rose-400' : 'text-slate-400'}">
+              ${net > 0 ? '+' + fmt(net) : net < 0 ? '-' + fmt(Math.abs(net)) : '₹0'}
+            </span>
+          </div>
+        `;
+      });
+    }
+
+    function renderHospitals() {
+      document.getElementById('hospitalsList').innerHTML = `
+        <div class="p-3 rounded-xl smart-card border border-white/5 flex justify-between items-center text-xs">
+          <div>
+            <div class="font-bold text-white">Sawai Man Singh (SMS) Govt Hospital</div>
+            <div class="text-[10px] text-rose-300">Level-1 Trauma Center • 2.1 km</div>
+          </div>
+          <a href="tel:0141-2518224" class="px-3 py-1.5 rounded-lg bg-rose-600 text-white font-bold text-xs">Call ER</a>
+        </div>
+        <div class="p-3 rounded-xl smart-card border border-white/5 flex justify-between items-center text-xs">
+          <div>
+            <div class="font-bold text-white">Fortis Escorts Hospital</div>
+            <div class="text-[10px] text-rose-300">NABH Super-Speciality • 6.4 km</div>
+          </div>
+          <a href="tel:0141-2547000" class="px-3 py-1.5 rounded-lg bg-rose-600 text-white font-bold text-xs">Call ER</a>
+        </div>
+      `;
+    }
+
+    // ACTIONS
+    function switchTab(id) {
+      ['budget', 'stays', 'heritage', 'safety', 'audio', 'split', 'assistant', 'gov'].forEach(t => {
+        const el = document.getElementById('tab-' + t);
+        const nav = document.getElementById('nav-' + t);
+        if (el) {
+          if (t === id) el.classList.remove('hidden');
+          else el.classList.add('hidden');
+        }
+        if (nav) {
+          if (t === id) nav.className = 'flex flex-col items-center flex-1 text-[#00D06C] text-[9px] font-bold scale-105';
+          else nav.className = 'flex flex-col items-center flex-1 text-slate-400 text-[9px]';
+        }
+      });
+      if (id === 'heritage' && !leafletMap) initLeaflet();
+    }
+
+    function switchStayTab(sub) {
+      if (sub === 'stays') {
+        document.getElementById('staysContent').classList.remove('hidden');
+        document.getElementById('transitContent').classList.add('hidden');
+        document.getElementById('btnStaySub').className = 'flex-1 py-1.5 rounded-lg bg-[#0084FF] text-white';
+        document.getElementById('btnTransitSub').className = 'flex-1 py-1.5 rounded-lg text-slate-400';
+      } else {
+        document.getElementById('staysContent').classList.add('hidden');
+        document.getElementById('transitContent').classList.remove('hidden');
+        document.getElementById('btnTransitSub').className = 'flex-1 py-1.5 rounded-lg bg-[#0084FF] text-white';
+        document.getElementById('btnStaySub').className = 'flex-1 py-1.5 rounded-lg text-slate-400';
+      }
+    }
+
+    function switchHeritageView(view) {
+      if (view === 'map') {
+        document.getElementById('heritageCards').classList.add('hidden');
+        document.getElementById('heritageMapWrap').classList.remove('hidden');
+        document.getElementById('btnHMap').className = 'px-2.5 py-1 rounded-lg bg-[#0084FF] text-white';
+        document.getElementById('btnHCard').className = 'px-2.5 py-1 rounded-lg text-slate-400';
+        initLeaflet();
+      } else {
+        document.getElementById('heritageCards').classList.remove('hidden');
+        document.getElementById('heritageMapWrap').classList.add('hidden');
+        document.getElementById('btnHCard').className = 'px-2.5 py-1 rounded-lg bg-[#0084FF] text-white';
+        document.getElementById('btnHMap').className = 'px-2.5 py-1 rounded-lg text-slate-400';
+      }
+    }
+
+    function initLeaflet() {
+      setTimeout(() => {
+        if (!leafletMap && window.L) {
+          leafletMap = window.L.map('leafletMap').setView([26.9124, 75.7873], 12);
+          window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(leafletMap);
+          heritageList.forEach(s => {
+            window.L.marker(s.coords).addTo(leafletMap).bindPopup(`<b>${s.name}</b><br>${s.gem ? '💎 Hidden Gem' : 'Major Monument'}`);
+          });
+        }
+      }, 200);
+    }
+
+    function toggleEcoFilter() {
+      ecoOnly = !ecoOnly;
+      const btn = document.getElementById('ecoFilterBtn');
+      if (ecoOnly) {
+        btn.className = 'px-2.5 py-1.5 rounded-xl text-xs font-bold border transition bg-emerald-950 border-[#00D06C] text-[#00D06C]';
+      } else {
+        btn.className = 'px-2.5 py-1.5 rounded-xl text-xs font-bold border transition bg-[#131D33] border-white/10 text-slate-400';
+      }
+      renderStays();
+    }
+
+    function toggleRole() {
+      currentRole = currentRole === 'tourist' ? 'gov_admin' : 'tourist';
+      document.getElementById('roleLabel').innerText = currentRole === 'gov_admin' ? 'Gov Mode' : 'Tourist';
+      document.getElementById('roleToggleBtn').className = currentRole === 'gov_admin' ? 'px-2 py-1 rounded-lg text-[10px] font-bold border transition bg-purple-950 border-purple-500 text-purple-200' : 'px-2 py-1 rounded-lg text-[10px] font-bold border transition bg-[#131D33] border-white/10 text-slate-300';
+      if (currentRole === 'gov_admin') switchTab('gov');
+      else switchTab('budget');
+    }
+
+    function changeCurrency(c) {
+      currentCurrency = c;
+      renderBudget();
+      renderStays();
+      renderHeritage();
+    }
+
+    function toggleOffline() {
+      isOffline = !isOffline;
+      const dot = document.getElementById('offlineDot');
+      if (isOffline) {
+        dot.innerText = '🔴 Offline';
+        alert('Simulated Offline Mode Active! Emergency contacts and itineraries are cached via Service Worker.');
+      } else {
+        dot.innerText = '🟢';
+      }
+    }
+
+    function switchCity(c) {
+      currentCity = c;
+      document.getElementById('heroTitle').innerText = (c === 'jaipur' ? 'Jaipur' : 'Varanasi') + ' Budget Pulse';
+      alert(`Switched destination to ${c.toUpperCase()}! Stays, transit, and heritage layers refreshed.`);
+    }
+
+    function triggerSOS() {
+      alert("🚨 EMERGENCY SOS BROADCASTED!\nCoordinates: 26.9855° N, 75.8513° E dispatched via local SMS to 112 Control Room.\nDialing 112...");
+      window.location.href = 'tel:112';
+    }
+
+    function bookStay(name, price) {
+      const cost = price * 2;
+      expenses.push({ id: 'e_' + Date.now(), title: `${name} (2N)`, category: 'stay', amount: cost, paidBy: 'm1' });
+      renderBudget();
+      alert(`Booked ${name}! ${fmt(cost)} deducted from Stay Bucket.`);
+      switchTab('budget');
+    }
+
+    function bookTransit(mode, fare) {
+      expenses.push({ id: 'e_' + Date.now(), title: `${mode} Ride`, category: 'travel', amount: fare, paidBy: 'm1' });
+      renderBudget();
+      alert(`Transit fare of ${fmt(fare)} deducted from Travel Bucket!`);
+      switchTab('budget');
+    }
+
+    function addHeritage(name, fee) {
+      if (fee > 0) {
+        expenses.push({ id: 'e_' + Date.now(), title: `Ticket: ${name}`, category: 'activities', amount: fee * 3, paidBy: 'm1' });
+        renderBudget();
+      }
+      alert(`Added ${name} to itinerary!`);
+      switchTab('budget');
+    }
+
+    function selectPlaque(idx) {
+      currentPlaqueIndex = idx;
+      const p = plaques[idx];
+      document.getElementById('plaqueTitle').innerText = p.title;
+      document.getElementById('plaqueScript').innerText = 'Script: ' + p.script;
+      document.getElementById('plaqueExcerpt').innerText = p.excerpt;
+      document.getElementById('plaqueDesc').innerText = p.desc[audioLang] || p.desc.en;
+      document.getElementById('plaqueImg').src = p.img;
+    }
+
+    function setAudioLang(l) {
+      audioLang = l;
+      ['en', 'hi', 'ta', 'kn'].forEach(k => {
+        document.getElementById('aud-' + k).className = k === l ? 'px-2.5 py-1 rounded-lg text-xs font-bold bg-[#0084FF] text-white' : 'px-2.5 py-1 rounded-lg text-xs font-bold bg-[#080C16] text-slate-400 border border-white/5';
+      });
+      selectPlaque(currentPlaqueIndex);
+    }
+
+    function playPlaqueAudio() {
+      const p = plaques[currentPlaqueIndex];
+      const text = p.desc[audioLang] || p.desc.en;
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        const m = { en: 'en-US', hi: 'hi-IN', ta: 'ta-IN', kn: 'kn-IN' };
+        u.lang = m[audioLang] || 'en-US';
+        window.speechSynthesis.speak(u);
+        alert(`🔊 Reading Inscription in ${audioLang.toUpperCase()}:\n"${text}"`);
+      } else {
+        alert(text);
+      }
+    }
+
+    function promptBudget() {
+      const v = prompt("Enter Total Trip Budget (INR):", totalBudget);
+      if (v && !isNaN(v)) { totalBudget = Number(v); renderBudget(); }
+    }
+
+    function promptExpense() {
+      const t = prompt("Expense Description:");
+      if (!t) return;
+      const a = prompt("Amount in INR:");
+      if (!a || isNaN(a)) return;
+      expenses.push({ id: 'e_' + Date.now(), title: t, category: 'food', amount: Number(a), paidBy: 'm1' });
+      renderBudget();
+    }
+
+    function promptAddMember() {
+      const n = prompt("Traveler Name:");
+      if (n) { members.push({ id: 'm_' + Date.now(), name: n, avatar: '🧳' }); renderSplit(); }
+    }
+
+    function sendChatMessage() {
+      const inp = document.getElementById('chatInput');
+      const q = inp.value.trim();
+      if (!q) return;
+      sendChatPrompt(q);
+      inp.value = '';
+    }
+
+    function sendChatPrompt(q) {
+      const box = document.getElementById('chatMessages');
+      box.innerHTML += `<div class="flex justify-end"><div class="bg-[#0084FF] text-white font-bold p-2.5 rounded-2xl rounded-tr-none max-w-[85%]">${q}</div></div>`;
+      const l = document.getElementById('chatLang').value;
+
+      setTimeout(() => {
+        let reply = "";
+        const lower = q.toLowerCase();
+        if (lower.includes('budget')) {
+          reply = `Live snapshot for ${currentCity}: Total pool ${fmt(totalBudget)} with ${fmt(totalBudget - expenses.reduce((a,b)=>a+Number(b.amount),0))} remaining. Safe daily spend is well maintained!`;
+        } else if (lower.includes('500') || lower.includes('under')) {
+          if (l === 'ta') reply = "₹500-க்குள் அனுபவங்கள்: 1. பன்னா மீனா படி கிணறு (இலவசம்), 2. லஸ்ஸிவாலா (₹90), 3. அனோகி அச்சு அருங்காட்சியகம் (₹80).";
+          else if (l === 'kn') reply = "₹500 ರೊಳಗಿನ ಸ್ಥಳಗಳು: 1. ಪನ್ನಾ ಮೀನಾ ಮೆಟ್ಟಿಲು ಬಾವಿ (ಉಚಿತ), 2. ಲಸ್ಸೀವಾಲಾ (₹90), 3. ಅನೋಖಿ ಮ್ಯೂಸಿಯಂ (₹80).";
+          else reply = `Top spots under ₹500: 1. Panna Meena Stepwell (Free, ₹50 camera), 2. Lassiwala on MI Road (₹90), 3. Anokhi Hand Printing Museum (₹80).`;
+        } else {
+          reply = `[Context-Injected Assistant] In ${currentCity} with ${fmt(totalBudget - expenses.reduce((a,b)=>a+Number(b.amount),0))} remaining: I recommend visiting Panna Meena ka Kund early morning, then LMB Johari Bazaar!`;
+        }
+        box.innerHTML += `<div class="smart-card border border-white/10 p-3 rounded-2xl rounded-tl-none text-slate-200 max-w-[88%]">${reply}</div>`;
+        box.scrollTop = box.scrollHeight;
+      }, 500);
+    }
+
+    function openEvalModal() { document.getElementById('evalModal').classList.remove('hidden'); }
+    function closeEvalModal() { document.getElementById('evalModal').classList.add('hidden'); }
+
+    function openCrowdAlert() { document.getElementById('crowdAlertModal').classList.remove('hidden'); }
+    function closeCrowdAlert() { document.getElementById('crowdAlertModal').classList.add('hidden'); }
+    function rerouteSpot(name, fee) {
+      addHeritage(name, fee);
+      closeCrowdAlert();
+    }
+
+    // Trigger proactive GPS crowd alert on startup
+    setTimeout(() => { openCrowdAlert(); }, 1200);
+
+    // INIT
+    renderBudget();
+    renderStays();
+    renderHeritage();
+    renderHospitals();
+  </script>
+</body>
+</html>

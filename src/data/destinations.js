@@ -1,0 +1,155 @@
+export const DESTINATIONS = {
+  jaipur: {
+    id: 'jaipur',
+    name: 'Jaipur',
+    tagline: 'The Pink City & Rajput Heritage',
+    state: 'Rajasthan',
+    country: 'India',
+    centerCoordinates: [26.9124, 75.7873],
+    currentWeather: {
+      temp: 34,
+      condition: 'Sunny & Hot',
+      uvIndex: 'High',
+      advisory: 'Peak afternoon heat (12 PM - 3 PM). Prefer indoor heritage museums or stepwells.'
+    },
+    spots: [
+      {
+        id: 'spot-amer-fort',
+        name: 'Amer Fort (Imperial Citadel)',
+        category: 'Major Monument',
+        hidden_gem: false,
+        shortDesc: 'Massive hilltop palace fortress with Sheesh Mahal mirror mosaics.',
+        coordinates: [26.9855, 75.8513],
+        image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=600&q=80',
+        entryFee: 100,
+        bestTimeToVisit: '08:00 AM - 10:30 AM',
+        crowd_level: 'High (11:00 AM - 03:30 PM)',
+        isCrowdedNow: true,
+        weatherOutdoor: true,
+        nearestTransport: 'Auto or Taxi from Sindhi Camp (₹250)',
+        tags: ['Iconic', 'Palace', 'High Footfall'],
+        audioGuide: 'Amer Fort was established in 967 AD by the Chanda clan and later expanded by Raja Man Singh I. Its double-walled sandstone ramparts repelled Mughal sieges.'
+      },
+      {
+        id: 'spot-panna-meena',
+        name: 'Panna Meena ka Kund',
+        category: 'Offbeat Stepwell',
+        hidden_gem: true,
+        shortDesc: '450-year-old criss-cross geometric stepwell nestled quietly near Amer.',
+        coordinates: [26.9856, 75.8569],
+        image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=600&q=80',
+        entryFee: 0,
+        cameraFee: 50,
+        bestTimeToVisit: '07:00 AM - 09:00 AM',
+        crowd_level: 'Low (Serene all day)',
+        isCrowdedNow: false,
+        weatherOutdoor: true,
+        nearestTransport: 'Shared auto from Amer Fort (₹30) or 8 min walk',
+        tags: ['Hidden Gem', 'No Crowds', 'Symmetry'],
+        audioGuide: 'Panna Meena ka Kund is a 16th-century rainwater harvesting marvel. The stair arrangement is mathematically designed so no visitor descends and ascends the same flight.'
+      },
+      {
+        id: 'spot-anokhi-museum',
+        name: 'Anokhi Museum of Hand Printing',
+        category: 'Indoor Craft Heritage',
+        hidden_gem: true,
+        shortDesc: 'Restored 16th-century Chanwar Padmini Haveli with live master block printers.',
+        coordinates: [26.9904, 75.8526],
+        image: 'https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?auto=format&fit=crop&w=600&q=80',
+        entryFee: 80,
+        cameraFee: 50,
+        bestTimeToVisit: '10:30 AM - 04:30 PM',
+        crowd_level: 'Low (Pleasant air-cooled galleries)',
+        isCrowdedNow: false,
+        weatherOutdoor: false, // Indoor alternative for extreme weather!
+        nearestTransport: 'Walking distance from Panna Meena Kund (800m)',
+        tags: ['Indoor Retreat', 'Eco Craft', 'Artisans'],
+        audioGuide: 'Anokhi museum celebrates centuries of traditional Bagru natural mud-resist and Sanganer wooden block printing. The restored haveli won a UNESCO heritage award.'
+      },
+      {
+        id: 'spot-gaitore-chhatriyan',
+        name: 'Gaitore Ki Chhatriyan',
+        category: 'Royal Cenotaphs',
+        hidden_gem: true,
+        shortDesc: 'Intricately carved white marble royal mausoleums in a peaceful mountain gorge.',
+        coordinates: [26.9392, 75.8340],
+        image: 'https://images.unsplash.com/photo-1598890777032-bde835ba27c2?auto=format&fit=crop&w=600&q=80',
+        entryFee: 50,
+        cameraFee: 40,
+        bestTimeToVisit: '09:00 AM - 11:30 AM',
+        crowd_level: 'Very Low',
+        isCrowdedNow: false,
+        weatherOutdoor: true,
+        nearestTransport: 'Auto from Badi Chaupar (₹100)',
+        tags: ['Hidden Gem', 'Marble Art', 'Tranquil'],
+        audioGuide: 'Gaitore holds the sacred funerary cenotaphs of the Kachwaha rulers. The cenotaph of Maharaja Sawai Jai Singh II is carved from flawless pure Makrana marble.'
+      },
+      {
+        id: 'spot-lmb-ghewar',
+        name: 'LMB Johari Bazaar (Since 1727)',
+        category: 'Authentic Food',
+        hidden_gem: false,
+        shortDesc: 'Heritage sweet confectioner famous for crisp Paneer Ghewar & Pyaaz Kachoris.',
+        coordinates: [26.9213, 75.8272],
+        image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80',
+        entryFee: 0,
+        avgMealCost: 350,
+        bestTimeToVisit: '12:00 PM - 03:30 PM',
+        crowd_level: 'Moderate',
+        isCrowdedNow: false,
+        weatherOutdoor: false,
+        nearestTransport: 'Badi Chaupar Metro Station (2 min walk)',
+        tags: ['Street Food', 'Ghewar', 'Johari Bazaar'],
+        audioGuide: 'LMB was established alongside the founding of Jaipur in 1727. Their honeycombed Paneer Ghewar is soaked in saffron and cardamom syrup.'
+      }
+    ]
+  },
+  varanasi: {
+    id: 'varanasi',
+    name: 'Varanasi',
+    tagline: 'The Spiritual Capital of Ancient Bharat',
+    state: 'Uttar Pradesh',
+    country: 'India',
+    centerCoordinates: [25.3176, 82.9739],
+    currentWeather: {
+      temp: 29,
+      condition: 'Humid & Overcast',
+      uvIndex: 'Moderate',
+      advisory: 'Evening boat rides on the Ganges recommended around 5:30 PM for Aarti.'
+    },
+    spots: [
+      {
+        id: 'spot-dashashwamedh',
+        name: 'Dashashwamedh Ghat Evening Aarti',
+        category: 'Spiritual Ceremony',
+        hidden_gem: false,
+        coordinates: [25.3076, 83.0107],
+        image: 'https://images.unsplash.com/photo-1571536802807-30451e3955d8?auto=format&fit=crop&w=600&q=80',
+        entryFee: 0,
+        bestTimeToVisit: '06:00 PM - 07:30 PM',
+        crowd_level: 'Very High (Peak 6 PM - 8 PM)',
+        isCrowdedNow: true,
+        weatherOutdoor: true,
+        nearestTransport: 'Cycle rickshaw from Godowlia',
+        tags: ['Ganga Aarti', 'Iconic', 'High Footfall'],
+        audioGuide: 'Seven young priests perform synchronized multi-tiered brass lamp rituals honoring Goddess Ganga, Lord Shiva, and the Sun.'
+      },
+      {
+        id: 'spot-sarnath-stupa',
+        name: 'Sarnath Deer Park & Dhamek Stupa',
+        category: 'Buddhist Heritage',
+        hidden_gem: true,
+        coordinates: [25.3812, 83.0224],
+        image: 'https://images.unsplash.com/photo-1590077428593-a55bb07c4665?auto=format&fit=crop&w=600&q=80',
+        entryFee: 50,
+        bestTimeToVisit: '09:00 AM - 12:00 PM',
+        crowd_level: 'Low to Moderate',
+        isCrowdedNow: false,
+        weatherOutdoor: true,
+        nearestTransport: 'Auto from Varanasi Cantt (₹250)',
+        tags: ['Hidden Gem', 'Ashoka Pillar', 'Peaceful'],
+        audioGuide: 'Lord Buddha delivered his first sermon setting into motion the Wheel of Dharma (Dharmachakra Pravartana) in this deer sanctuary.'
+      }
+    ]
+  }
+};
