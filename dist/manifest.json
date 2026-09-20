@@ -1,0 +1,16 @@
+{
+  "name": "SmartTour360 | Smart Tourism Companion",
+  "short_name": "SmartTour360",
+  "description": "Unified smart tourism platform for live budgeting, stays, hidden heritage, offline SOS, multilingual audio guides, crowd alerts, and government tourism analytics.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080C16",
+  "theme_color": "#0084FF",
+  "icons": [
+    {
+      "src": "/logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
